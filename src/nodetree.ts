@@ -1,22 +1,11 @@
 import { LineTree } from './linetree'
+import { TagmlNode } from './node'
 import { NodeToken, Token, TokenizedLineTree, tokenizeLineTree } from './tokenize'
 
 export const parseNodeTree = (linetree: LineTree) => {
 	if(linetree === null) return null
 
 	return parseRoot(tokenizeLineTree(linetree))
-}
-
-const createNode = (token: NodeToken) => {
-	const { name, meta } = token
-	const node: TagmlNode = {
-		name,
-		attributes: new Map(),
-		children: [],
-	}
-	if(meta) node.meta = meta
-
-	return node
 }
 
 const appendToken = (node: TagmlNode, token: Token) => {
@@ -37,14 +26,9 @@ const appendToken = (node: TagmlNode, token: Token) => {
 			)
 			return node
 		}
-		case 'comment': {
-			if(!node.comments) node.comments = []
-			node.comments.push(token.value)
-
-			return node
-		}
+		case 'comment': return node.addComment(token.value)
 		case 'node': {
-			const newNode = createNode(token)
+			const newNode = TagmlNode.fromToken(token)
 			node.children.push(newNode)
 
 			return newNode
@@ -56,7 +40,7 @@ const parseRoot = (subtree: TokenizedLineTree) => {
 	if(subtree.tokens.at(0)?.type !== 'node')
 		throw new Error('Root node not found')
 
-	const root = createNode(subtree.tokens.at(0) as NodeToken)
+	const root = TagmlNode.fromToken(subtree.tokens.at(0) as NodeToken)
 
 	const restTokens = subtree.tokens.slice(1)
 	const cursor = restTokens.reduce(
@@ -73,12 +57,4 @@ const parseBlock = (block: TokenizedLineTree, root: TagmlNode) => {
 		(node, token) => appendToken(node, token), root
 	)
 	block.children.forEach(block => parseBlock(block, cursor))
-}
-
-type TagmlNode = {
-	name: string,
-	meta?: string,
-	attributes: Map<string, string | null>
-	comments?: string[]
-	children: TagmlNode[]
 }
