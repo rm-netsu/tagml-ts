@@ -1,11 +1,11 @@
 import { LineTree } from './linetree'
-import { TagmlNode } from './node'
+import { RootNode, TagmlNode } from '../node/index'
 import { NodeToken, Token, TokenizedLineTree, tokenizeLineTree } from './tokenize'
 
-export const parseNodeTree = (linetree: LineTree) => {
+export const parseNodeTree = (linetree: LineTree): TagmlNode | null => {
 	if(linetree === null) return null
 
-	return parseRoot(tokenizeLineTree(linetree))
+	return new RootNode(parseRoot(tokenizeLineTree(linetree)))
 }
 
 const appendToken = (node: TagmlNode, token: Token) => {
