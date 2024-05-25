@@ -1,6 +1,5 @@
-import { NAMESPACES } from '../node/namespaces'
-import { RootNode, TagmlNode } from '../node/node'
-import { GenericHeadNode } from './root/head'
+import { NAMESPACES, RootNode, TagmlNode } from '../node/index'
+import { GenericHeadNode, useGenericHeadNode } from './root/head'
 
 export class GenericRootNode extends RootNode {
 	namespace: string
@@ -11,11 +10,8 @@ export class GenericRootNode extends RootNode {
 		super(node)
 		this.namespace = this.attributes.get('namespace') ?? 'generic'
 
-		this.head = this.findChildAs(
-			$ => $.nodeName === 'head',
-			GenericHeadNode
-		)
-		this.body = this.findChild($ => $.nodeName === 'body')
+		useGenericHeadNode(this)
+		this.body = this.query.child($ => $.nodeName === 'body')
 	}
 }
 

@@ -1,6 +1,8 @@
 import { NodeToken } from '../parsing/tokenize'
+import { NodeChildrenQueryInterface } from './children-query'
 
 export type TagmlNodeConstructData = {
+
 	nodeName: string
 	rawNodeMetadata?: string
 	attributes?: Map<string, string | null>
@@ -9,24 +11,35 @@ export type TagmlNodeConstructData = {
 }
 
 export class TagmlNode {
+
 	nodeName: string
 	declare rawNodeMetadata?: string
 	attributes: Map<string, string | null>
 	declare comments?: string[]
+	/** @deprecated */
 	children: TagmlNode[]
 
+	query: NodeChildrenQueryInterface
+
 	constructor(data: TagmlNodeConstructData) {
+
 		this.nodeName = data.nodeName
 		this.attributes = data.attributes ?? new Map()
 		this.children = data.children ?? []
 
 		if(data.rawNodeMetadata) this.rawNodeMetadata = data.rawNodeMetadata
 		if(data.comments) this.comments = data.comments
+
+		this.query = new NodeChildrenQueryInterface(this.children)
 	}
 
 	static fromToken(token: NodeToken) {
 		const { name, meta } = token
 		return new TagmlNode({ nodeName: name, rawNodeMetadata: meta })
+	}
+
+	cast<T extends TagmlNode>(as: NodeConstructor<T>) {
+		return new as(this)
 	}
 
 	addComment(comment: string) {
@@ -35,36 +48,28 @@ export class TagmlNode {
 		return this
 	}
 
-	findChild(predicate: ArrPredicate<TagmlNode>) {
-		return this.children.find(predicate) ?? null
-	}
-	findDescendant(predicate: ArrPredicate<TagmlNode>): TagmlNode | null {
-		const result = this.findChild(predicate)
-		if(result) return result
+	requireAttribute(name: string, validateFn?: AttrValidateFn) {
+		const value = this.attributes.get(name)
+		if(value === undefined)
+			throw new Error(`Missing required attribute '${name}'`)
 
-		for(const child of this.children) {
-			const result = child.findDescendant(predicate)
-			if(result) return result
-		}
+		if(validateFn && !validateFn(value))
+			throw new Error(`Invalid value of attribute '${name}'`)
 
-		return null
+		return value
+	}
+	requireString(name: string, validateFn?: AttrValidateFn<string>) {
+		const value = this.requireAttribute(name)
+		if(value === null || (validateFn && !validateFn(value)))
+			throw new Error(`Invalid value of attribute '${name}'`)
+
+		return value
 	}
 
-	findChildAs<T extends TagmlNode>(
-		predicate: ArrPredicate<TagmlNode>,
-		as: NodeConstructor<T>
-	): T | null {
-		const node = this.findChild(predicate)
-		return node? new as(node) : null
-	}
-	findDescendantAs<T extends TagmlNode>(
-		predicate: ArrPredicate<TagmlNode>,
-		as: NodeConstructor<T>
-	): T | null {
-		const node = this.findDescendant(predicate)
-		return node? new as(node) : null
+	hasAttributes(...attrNames: string[]) {
+		return attrNames.every($ => this.attributes.has($))
 	}
 }
 
-type ArrPredicate<T> = (value: T, index: number, obj: T[]) => boolean
-type NodeConstructor<T extends TagmlNode> = new (node: TagmlNode) => T
+export type NodeConstructor<T extends TagmlNode> = new (node: TagmlNode) => T
+type AttrValidateFn<T = string|null> = (value: T) => boolean

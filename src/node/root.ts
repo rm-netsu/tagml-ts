@@ -6,10 +6,7 @@ export class RootNode extends TagmlNode {
 
     constructor(node: TagmlNode) {
         super(node)
-		const packageName = this.attributes.get('package')
-		if(!packageName)
-			throw new Error('Root node must have valid `package` attribute')
-        this.packageName = packageName
+		this.packageName = this.requireString('package')
         this.namespace = this.attributes.get('namespace') ?? 'generic'
     }
 }

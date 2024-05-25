@@ -1,35 +1,37 @@
 import { TagmlNode } from '@/node/node'
-import { PackageImportNode } from './import/package'
+import { useEntityImportNode, usePackageImportNode } from './import/index'
+import { GenericHeadNode } from '../head'
 
 export class GenericImportNode extends TagmlNode {
-	packageName: string
+	packageName!: string
 	entityType: string | null = null
 	entityName: string | null = null
 	entityAlias: string | null = null
 
 	constructor(node: TagmlNode) {
 		super(node)
-		const packageImport = this.findChildAs(
-			$ => $.nodeName === 'package',
-			PackageImportNode
-		)
-		if(packageImport) {
-			this.packageName = packageImport.packageName
-			return this
-		}
+		usePackageImportNode(this) || useEntityImportNode(this)
 
-		const entityImport = this.findChild(
-			$ => !!$.attributes.get('ref') && !!$.attributes.get('from')
-		)
-		if(entityImport) {
-			this.packageName = entityImport.attributes.get('from')!
-			this.entityType = entityImport.nodeName
-			this.entityName = entityImport.attributes.get('ref')!
-			const alias = entityImport.attributes.get('as')
-			if(alias) this.entityAlias = alias
-			return this
-		}
-
-		throw new Error('Import must contain package or entity reference')
+		if(!this.packageName)
+			throw new Error('Import must contain package or entity reference')
 	}
+}
+
+export const useGenericImportNode = (head: GenericHeadNode) => {
+	head.query.childrenAs(
+		$ => $.nodeName === 'import',
+		GenericImportNode
+	).forEach(im => {
+		if(!head.imports.has(im.packageName))
+			head.imports.set(im.packageName, [])
+
+		if(im.entityName) {
+			head.imports.get(im.packageName)!.push({
+				type: im.entityType!,
+				name: im.entityName,
+				alias: im.entityAlias
+			})
+		}
+		else head.imports.get(im.packageName)!.push('*')
+	})
 }
