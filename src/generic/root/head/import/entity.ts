@@ -20,18 +20,21 @@ export class EntityImportNode extends TagmlNode {
 }
 
 export const useEntityImportNode = (importNode: GenericImportNode) => {
-	const entityImport = importNode.query.childAs(
+	const entityImport = importNode.query.childrenAs(
 		$ =>
 			($.attributes.has('ref') || $.rawNodeMetadata !== null)
 			&& $.attributes.has('from'),
 		EntityImportNode
 	)
-	if(entityImport) {
-		importNode.packageName = entityImport.packageName
-		importNode.entityType = entityImport.entityType
-		importNode.entityName = entityImport.entityName
-		importNode.entityAlias = entityImport.entityAlias
-		return true
-	}
-	return false
+	entityImport.forEach($ => {
+		const pkgName = $.packageName
+		if(!importNode.imports.has(pkgName))
+			importNode.imports.set(pkgName, [])
+
+		importNode.imports.get(pkgName)!.push({
+			type: $.entityType!,
+			name: $.entityName,
+			alias: $.entityAlias
+		})
+	})
 }

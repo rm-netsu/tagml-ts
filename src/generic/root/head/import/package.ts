@@ -11,13 +11,15 @@ export class PackageImportNode extends TagmlNode {
 }
 
 export const usePackageImportNode = (importNode: GenericImportNode) => {
-	const packageImport = importNode.query.childAs(
+	const packageImport = importNode.query.childrenAs(
 		$ => $.nodeName === 'package',
 		PackageImportNode
 	)
-	if(packageImport) {
-		importNode.packageName = packageImport.packageName
-		return true
-	}
-	return false
+	packageImport.forEach($ => {
+		const pkgName = $.packageName
+		if(!importNode.imports.has(pkgName))
+			importNode.imports.set(pkgName, [])
+
+		importNode.imports.get(pkgName)!.push('*')
+	})
 }

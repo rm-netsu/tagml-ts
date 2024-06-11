@@ -2,18 +2,20 @@ import { TagmlNode } from '@/node/node'
 import { useEntityImportNode, usePackageImportNode } from './import/index'
 import { GenericHeadNode } from '../head'
 
+export type ImportEntry = {
+	type: string
+	name: string
+	alias: string | null
+} | '*'
+export type ImportMap = Map<string, ImportEntry[]>
+
 export class GenericImportNode extends TagmlNode {
-	packageName!: string
-	entityType: string | null = null
-	entityName: string | null = null
-	entityAlias: string | null = null
+	imports: ImportMap = new Map()
 
 	constructor(node: TagmlNode) {
 		super(node)
-		usePackageImportNode(this) || useEntityImportNode(this)
-
-		if(!this.packageName)
-			throw new Error('Import must contain package or entity reference')
+		usePackageImportNode(this)
+		useEntityImportNode(this)
 	}
 }
 
@@ -22,16 +24,10 @@ export const useGenericImportNode = (head: GenericHeadNode) => {
 		$ => $.nodeName === 'import',
 		GenericImportNode
 	).forEach(im => {
-		if(!head.imports.has(im.packageName))
-			head.imports.set(im.packageName, [])
-
-		if(im.entityName) {
-			head.imports.get(im.packageName)!.push({
-				type: im.entityType!,
-				name: im.entityName,
-				alias: im.entityAlias
-			})
-		}
-		else head.imports.get(im.packageName)!.push('*')
+		im.imports.forEach(($$v,$k) => {
+			if(!head.imports.has($k))
+				head.imports.set($k, [...$$v])
+			else head.imports.get($k)!.push(...$$v)
+		})
 	})
 }
