@@ -20,7 +20,7 @@ export const useGenericHeadNode = (root: GenericRootNode) => {
 		GenericHeadNode
 	)
 	// preload imports
-	head!.imports.forEach(($$v, $k) => {
+	head?.imports.forEach(($$v, $k) => {
 		root.repo?.fetch($k).then($ => console.log($))
 	})
 	root.head = head
