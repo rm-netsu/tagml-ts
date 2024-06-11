@@ -30,6 +30,7 @@ const appendToken = (node: TagmlNode, token: Token) => {
 		case 'node': {
 			const newNode = TagmlNode.fromToken(token)
 			node.children.push(newNode)
+			newNode.parent = node
 
 			return newNode
 		}

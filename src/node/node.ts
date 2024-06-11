@@ -2,12 +2,12 @@ import { NodeToken } from '../parsing/tokenize'
 import { NodeChildrenQueryInterface } from './children-query'
 
 export type TagmlNodeConstructData = {
-
 	nodeName: string
 	rawNodeMetadata?: string
 	attributes?: Map<string, string | null>
 	comments?: string[]
 	children?: TagmlNode[]
+	parent?: TagmlNode | null
 }
 
 export class TagmlNode {
@@ -18,6 +18,7 @@ export class TagmlNode {
 	declare comments?: string[]
 	/** @deprecated */
 	children: TagmlNode[]
+	parent: TagmlNode | null
 
 	query: NodeChildrenQueryInterface
 
@@ -26,6 +27,7 @@ export class TagmlNode {
 		this.nodeName = data.nodeName
 		this.attributes = data.attributes ?? new Map()
 		this.children = data.children ?? []
+		this.parent = data.parent ?? null
 
 		if(data.rawNodeMetadata) this.rawNodeMetadata = data.rawNodeMetadata
 		if(data.comments) this.comments = data.comments
@@ -39,7 +41,11 @@ export class TagmlNode {
 	}
 
 	cast<T extends TagmlNode>(as: NodeConstructor<T>) {
-		return new as(this)
+		const casted = new as(this)
+		const ind = casted.parent?.children.indexOf(this)
+		if(ind !== undefined)
+			casted.parent?.children.splice(ind, 1, casted)
+		return casted
 	}
 
 	addComment(comment: string) {
