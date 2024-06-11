@@ -12,8 +12,13 @@ export class TagmlNamespaceRegistry {
 		const namespace = [...this.constructors.keys()]
 			.filter($ => node.namespace.startsWith($))
 			.sort()
-			.map($ => this.constructors.get($)!)
-		return namespace.reduce((root, ns) => new ns(root), node)
+			.at(-1)
+		if(!namespace)
+			throw Error(
+				`Root constructor for namespace '${node.namespace}' not found`
+			)
+
+		return new (this.constructors.get(namespace))!(node)
 	}
 }
 

@@ -15,9 +15,14 @@ export class GenericHeadNode extends TagmlNode {
 }
 
 export const useGenericHeadNode = (root: GenericRootNode) => {
-	root.head = root.query.childAs(
+	const head = root.query.childAs(
 		$ => $.nodeName === 'head',
 		GenericHeadNode
 	)
+	// preload imports
+	head!.imports.forEach(($$v, $k) => {
+		root.repo?.fetch($k).then($ => console.log($))
+	})
+	root.head = head
 	return true
 }
