@@ -9,7 +9,12 @@ export class GenericRootNode extends RootNode {
 		super(node)
 		this.repo = node.repo
 		
-		useGenericHeadNode(this)
+		if(useGenericHeadNode(this)) {
+			this.head!.imports.forEach(($$v, $k) => {
+				this.repo?.fetch($k).then($ => console.log($))
+			})
+		}
+
 		this.body = this.query.child($ => $.nodeName === 'body')
 	}
 }
