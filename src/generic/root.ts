@@ -7,6 +7,7 @@ export class GenericRootNode extends RootNode {
 
 	constructor(node: RootNode) {
 		super(node)
+		this.repo = node.repo
 		
 		useGenericHeadNode(this)
 		this.body = this.query.child($ => $.nodeName === 'body')
