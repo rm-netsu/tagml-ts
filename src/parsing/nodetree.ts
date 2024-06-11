@@ -2,7 +2,7 @@ import { LineTree } from './linetree'
 import { RootNode, TagmlNode } from '../node/index'
 import { NodeToken, Token, TokenizedLineTree, tokenizeLineTree } from './tokenize'
 
-export const parseNodeTree = (linetree: LineTree): TagmlNode | null => {
+export const parseNodeTree = (linetree: LineTree) => {
 	if(linetree === null) return null
 
 	return new RootNode(parseRoot(tokenizeLineTree(linetree)))
